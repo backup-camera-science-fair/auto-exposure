@@ -1,0 +1,23 @@
+import cv2
+from picamera.array import PiRGBArray
+from picamera import PiCamera
+
+# Initialize the USB camera
+camera1 = cv2.VideoCapture(0)
+
+# Initialize the PiCamera
+camera2 = PiCamera()
+
+# Grab the frames from the USB camera
+_, frame1 = camera1.read()
+
+# Grab the frames from the PiCamera
+rawCapture = PiRGBArray(camera2)
+camera2.capture(rawCapture, format="bgr")
+frame2 = rawCapture.array
+
+# Combine the frames
+combined_frame = cv2.hconcat([frame1, frame2])
+
+# Show the combined frame
+cv2.imshow('Combined Frame', combined_frame)
