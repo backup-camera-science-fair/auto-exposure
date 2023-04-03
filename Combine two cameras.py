@@ -1,7 +1,11 @@
 import cv2
+import cvzone
 import torch
+import numpy as np
 
 font = cv2.FONT_HERSHEY_SIMPLEX
+
+scaleMultiple = 2
 
 # Create a VideoCapture object for each webcam
 webcam1 = cv2.VideoCapture(0)
@@ -12,12 +16,16 @@ webcam1.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
 webcam2.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
 webcam1.set(cv2.CAP_PROP_FPS, 60)
 webcam2.set(cv2.CAP_PROP_FPS, 60)
+
 # Set the dimensions of the output frame
 width = 1280
 height = 720
 
 model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
 labels = model.names
+
+lines = cv2.imread("lines.png", cv2.IMREAD_UNCHANGED)
+lines = cv2.resize(lines, (640 * scaleMultiple, 480 * scaleMultiple))
 
 # Create a window to display the video
 # cv2.namedWindow("Webcam1", cv2.WND_PROP_FULLSCREEN)
@@ -32,7 +40,7 @@ while True:
     # Resize frame2 to a smaller size
     frame2 = cv2.resize(frame2, (320, 180))
 
-    frame1 = cv2.flip(frame1, 0)
+    # frame1 = cv2.flip(frame1, 0)
 
     # Gives results as a tensor
     results = model(frame1).xyxy[0]
@@ -43,7 +51,7 @@ while True:
         br = (int(row[2]), int(row[1]))
         cv2.rectangle(frame1, tl, br, (0, 255, 0), 3)
         text = labels[row[5]]
-        cv2.putText(frame1, text, tl, font, 2, (255,255,255), 2, cv2.LINE_AA)
+        cv2.putText(frame1, text, tl, font, 1, (255,255,255), 2, cv2.LINE_AA)
 
     results = model(frame2).xyxy[0]
 
@@ -59,6 +67,8 @@ while True:
     x_offset = frame1.shape[1] - frame2.shape[1]
     y_offset = 0
     frame1[y_offset:y_offset+frame2.shape[0], x_offset:x_offset+frame2.shape[1]] = frame2
+
+    frame1 = cvzone.overlayPNG(frame1, lines, [int((frame1.shape[1] / 2) - lines.shape[1] / 2) , int(frame1.shape[0] - lines.shape[0])])
 
     # Display the resulting frame
     cv2.imshow("Webcam1", frame1)
